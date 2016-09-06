@@ -1,0 +1,65 @@
+#!/bin/bash
+# export database to a mysql dump file
+# gzip dump file if dump file name is *.gz
+# auto use --single-transaction for 100% innodb DB
+# auto use --lock-tables for not 100% innodb DB
+
+# vars
+NAME=$(basename $0)
+USAGE=$(printf "Usage: %s: [-h] [-g] DB_NAME SQL_DUMP_FILE" $NAME)
+
+# commands and options
+CMD_MYSQL="mysql --defaults-file=/etc/mysql/debian.cnf"
+DO_SQL_OPT="-s --skip-column-names"
+CMD_DUMP="mysqldump --defaults-file=/etc/mysql/debian.cnf"
+
+# parse optionals args
+while getopts 'h' OPTION
+do
+    case $OPTION in
+    h)
+        printf "$USAGE\n"
+        printf "  -h    print this help message\n"
+        printf "  -g    gzip dump file\n"
+        exit 0
+        ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+# parse fixed args
+DB=$1
+DUMP=$2
+
+# some checks
+[ $EUID -ne 0 ] && { printf "ERROR: $NAME needs to be run by root\n" 1>&2; exit 1; }
+[ $# -ne 2 ] && { printf "$USAGE\n" 1>&2; exit 1; }
+
+# check if database exist
+SQL="SHOW DATABASES LIKE '$DB'"
+if test "$($CMD_MYSQL $DO_SQL_OPT -e "$SQL")" != $DB
+    then { printf "ERROR: database $DB not exist\n" 1>&2; exit 1; }
+fi
+
+# check if database is 100% innodb
+SQL="SELECT count(*) FROM INFORMATION_SCHEMA.TABLES
+     WHERE TABLE_SCHEMA = '$DB' AND ENGINE != 'InnoDB'"
+NB_NO_INNO=$($CMD_MYSQL $DO_SQL_OPT -e "$SQL")
+
+# use gzip for *.gz dump file
+if [[ $DUMP =~ \.gz$ ]]
+    then CMP="gzip"
+    else CMP="tee"
+fi
+
+# export with mysqldump
+DUMP_OPT="--routines --triggers --events"
+
+if test "$NB_NO_INNO" -eq 0
+then
+    # dump 100% innodb
+    $CMD_DUMP $DUMP_OPT --single-transaction $DB | $CMP > $DUMP
+else
+    # dump not 100% innodb
+    $CMD_DUMP $DUMP_OPT --lock-tables $DB | $CMP > $DUMP
+fi

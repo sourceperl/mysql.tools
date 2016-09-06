@@ -1,0 +1,33 @@
+#!/bin/bash
+# convert current SQL dump file from mysql 4x to 5x format
+# usage: mysql_convert_4to5 my_mysql4_dump.sql
+
+# vars
+NAME=$(basename $0)
+USAGE=$(printf "Usage: %s: [-h] SQL_DUMP_FILE" $NAME)
+
+# parse optionals args
+while getopts 'h' OPTION
+do
+    case $OPTION in
+    h)
+        printf "$USAGE\n"
+        printf "  -h    print this help message\n"
+        exit 0
+        ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+# parse fixed args
+DUMP=$1
+
+# some checks
+[ $# -ne 1 ] && { printf "$USAGE\n" 1>&2; exit 1; }
+[ ! -f $DUMP ] && { printf "ERROR: %s is not a regular file\n" $DUMP 1>&2; exit 1; }
+[ ! -w $DUMP ] && { printf "ERROR: %s is not writable\n" $DUMP 1>&2; exit 1; }
+
+# do the stuff
+sed -r -i -e 's/^--(.*)$/#\1/' $DUMP
+sed -i -e 's/) TYPE=/) ENGINE=/' $DUMP
+sed -i -e 's/timestamp(14) NOT NULL,$/timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,/' $DUMP
