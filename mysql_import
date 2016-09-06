@@ -15,6 +15,7 @@ do
     case $OPTION in
     h)
         printf "$USAGE\n"
+        printf "import a database from a SQL dump file (gunzipped for *.gz name)\n"
         printf "  -h    print this help message\n"
         exit 0
         ;;

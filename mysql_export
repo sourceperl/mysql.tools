@@ -6,7 +6,7 @@
 
 # vars
 NAME=$(basename $0)
-USAGE=$(printf "Usage: %s: [-h] [-g] DB_NAME SQL_DUMP_FILE" $NAME)
+USAGE=$(printf "Usage: %s: [-h] DB_NAME SQL_DUMP_FILE" $NAME)
 
 # commands and options
 CMD_MYSQL="mysql --defaults-file=/etc/mysql/debian.cnf"
@@ -19,8 +19,8 @@ do
     case $OPTION in
     h)
         printf "$USAGE\n"
+        printf "export a database to a SQL dump file (gzipped for *.gz name)\n"
         printf "  -h    print this help message\n"
-        printf "  -g    gzip dump file\n"
         exit 0
         ;;
     esac
