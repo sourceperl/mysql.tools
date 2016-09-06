@@ -1,5 +1,6 @@
 #!/bin/bash
-# import a mysql dump
+# import a mysql dump file to a database
+# gunzip dump file if dump file name is *.gz
 
 # vars
 NAME=$(basename $0)
