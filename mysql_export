@@ -19,7 +19,7 @@ do
     case $OPTION in
     h)
         printf "$USAGE\n"
-        printf "export a database to a SQL dump file (gzipped for *.gz name)\n"
+        printf "export a database to an SQL dump file (gzipped for *.gz name)\n"
         printf "  -h    print this help message\n"
         exit 0
         ;;

@@ -12,6 +12,7 @@ do
     case $OPTION in
     h)
         printf "$USAGE\n"
+        printf "convert an SQL dump file from MySQL 4 format to 5\n"
         printf "  -h    print this help message\n"
         exit 0
         ;;
