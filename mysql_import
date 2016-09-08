@@ -4,21 +4,26 @@
 
 # vars
 NAME=$(basename $0)
-USAGE=$(printf "Usage: %s: [-h] DB_NAME SQL_DUMP_FILE" $NAME)
+USAGE=$(printf "Usage: %s: [-h] [-f] DB_NAME SQL_DUMP_FILE" $NAME)
+FORCE=0
 
 # commands
 CMD_MYSQL="mysql --defaults-file=/etc/mysql/debian.cnf"
+DO_SQL_OPT="-s --skip-column-names"
 
 # parse optionals args
-while getopts 'h' OPTION
+while getopts 'hf' OPTION
 do
     case $OPTION in
     h)
-        printf "$USAGE\n"
-        printf "import a database from an SQL dump file (gunzipped for *.gz name)\n"
+        printf "import a database from an SQL dump file (gunzipped for *.gz name)\n\n"
+        printf "$USAGE\n\n"
         printf "  -h    print this help message\n"
+        printf "  -f    force import event if DB is not empty\n"
         exit 0
         ;;
+    f)
+        FORCE=1
     esac
 done
 shift $(($OPTIND - 1))
@@ -31,6 +36,18 @@ DUMP=$2
 [ $EUID -ne 0 ] && { printf "ERROR: $NAME needs to be run by root\n" 1>&2; exit 1; }
 [ $# -ne 2 ] && { printf "$USAGE\n" 1>&2; exit 1; }
 [ ! -f $DUMP ] && { printf "ERROR: %s is not a regular file\n" $DUMP 1>&2; exit 1; }
+
+# check if database exist
+SQL="SHOW DATABASES LIKE '$DB'"
+if test "$($CMD_MYSQL $DO_SQL_OPT -e "$SQL")" != $DB
+    then { printf "ERROR: database $DB not exist\n" 1>&2; exit 1; }
+fi
+
+# check if database is empty
+SQL="SELECT COUNT(DISTINCT table_name) FROM information_schema.columns WHERE table_schema = '$DB'"
+if test "$($CMD_MYSQL $DO_SQL_OPT -e "$SQL")" != 0 && [ $FORCE -ne 1 ]
+    then { printf "ERROR: database $DB is not empty\n" 1>&2; exit 1; }
+fi
 
 # import with zcat if *.gz
 if [[ $DUMP =~ \.gz$ ]]

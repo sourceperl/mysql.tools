@@ -11,8 +11,8 @@ while getopts 'h' OPTION
 do
     case $OPTION in
     h)
-        printf "$USAGE\n"
-        printf "convert an SQL dump file from MySQL 4 format to 5\n"
+        printf "convert an SQL dump file from MySQL 4 format to 5\n\n"
+        printf "$USAGE\n\n"
         printf "  -h    print this help message\n"
         exit 0
         ;;
