@@ -26,7 +26,7 @@ ROTATE_CONF="$BAK_FILE {\n
   daily\n
   rotate 8\n
   nocompress\n
-  create 640 root adm\n
+  create 640 root root\n
   postrotate\n
   mysql_export $DB $BAK_FILE\n
   endscript\n}"
